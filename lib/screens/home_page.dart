@@ -1,5 +1,7 @@
+import 'package:bloc_practice/bloc/notes/notes_bloc.dart';
 import 'package:bloc_practice/screens/note_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -13,28 +15,41 @@ class HomePage extends StatelessWidget {
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
-            const SizedBox(height: 20),
-            EachTile(
-              title: 'First Tile',
-              delete: () {},
-              edit: () {},
-            ),
-            const SizedBox(height: 20),
-            EachTile(
-              title: 'Second Tile',
-              delete: () {},
-              edit: () {},
-            ),
-            const SizedBox(height: 20),
-            EachTile(
-              title: 'Third Tile',
-              delete: () {},
-              edit: () {},
-            ),
-          ],
+        child: BlocBuilder<NotesBloc, NotesState>(
+          builder: (context, state) {
+            if (state is NotesLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (state is NotesLoaded) {
+              return ListView.builder(
+                itemCount: state.notes.length,
+                itemBuilder: (context, index) {
+                  return EachTile(
+                    title: state.notes[index].title,
+                    delete: () {
+                      context.read<NotesBloc>().add(
+                            DeleteNote(
+                              note: state.notes[index],
+                            ),
+                          );
+                    },
+                    edit: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => NotePage(
+                            note: state.notes[index],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              );
+            } else {
+              return Text('Something went wrong',
+                  style: Theme.of(context).textTheme.headlineSmall);
+            }
+          },
         ),
       ),
       floatingActionButton: FloatingActionButton(
